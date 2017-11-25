@@ -12,7 +12,9 @@ import org.jvnet.hk2.annotations.Contract;
 @Contract
 public interface RegionService {
     
-    public Map<String, List<CensusScore>> getRegionCensus(String region);
+    public Map<String, List<CensusScore>> getRegionCensus(
+            String region, RetrievalMode mode);
 
-    public List<CensusScore> getNationCensus(String nation);
+    public List<CensusScore> getNationCensus(
+            String nation, RetrievalMode mode);
 }

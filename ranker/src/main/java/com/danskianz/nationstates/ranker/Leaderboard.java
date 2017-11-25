@@ -52,14 +52,20 @@ public class Leaderboard {
             @PathParam("region") String region) {
 
         MultivaluedMap<String, String> params = allUri.getQueryParameters();
-
-        Map<String, List<CensusScore>> regionCensus = provider
-                .getRegionCensus(region);
-
-        Map<String, Double> standings = getStandings(regionCensus);
         
+        RetrievalMode mode = RetrievalMode.valueOf(params.getFirst("mode"));
+
         int nations = params.isEmpty() ? DEFAULT_NUM_OF_NATIONS :
                 Integer.parseInt(params.getFirst("top"));
+        
+        Map<String, List<CensusScore>> regionCensus = provider
+                .getRegionCensus(region, mode);
+        
+        if (regionCensus.size() < nations) {
+            nations = regionCensus.size();
+        }
+        
+        Map<String, Double> standings = getStandings(regionCensus);
         
         return standings.entrySet().stream()
                 .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
@@ -83,11 +89,17 @@ public class Leaderboard {
 
         MultivaluedMap<String, String> params = allUri.getQueryParameters();
         
+        RetrievalMode mode = RetrievalMode.valueOf(params.getFirst("mode"));
+        
         int nations = params.isEmpty() ? DEFAULT_NUM_OF_NATIONS :
                 Integer.parseInt(params.getFirst("bottom"));
-
+        
         Map<String, List<CensusScore>> regionCensus = provider
-                .getRegionCensus(region);
+                .getRegionCensus(region, mode);
+        
+        if (regionCensus.size() < nations) {
+            nations = regionCensus.size();
+        }
         
         Map<String, Double> standings = getStandings(regionCensus);
 
@@ -103,7 +115,7 @@ public class Leaderboard {
         Map<String, Double> standings = new HashMap<>();
         
         regionCensus.entrySet().forEach((nation) -> {
-            standings.put(nation.getKey(), Ranker.rawScore(nation.getValue()));
+            standings.put(nation.getKey(), Ranker.rank(nation.getValue()));
         });
         
         return standings;
@@ -121,8 +133,12 @@ public class Leaderboard {
     public Map<String, Double> getNationScore(
             @PathParam("nation") String nation) {
         
-        List<CensusScore> nationCensus = provider.getNationCensus(nation);
+        MultivaluedMap<String, String> params = allUri.getQueryParameters();
         
-        return Collections.singletonMap(nation, Ranker.rawScore(nationCensus));
+        RetrievalMode mode = RetrievalMode.valueOf(params.getFirst("mode"));
+        
+        List<CensusScore> nationCensus = provider.getNationCensus(nation, mode);
+        
+        return Collections.singletonMap(nation, Ranker.rank(nationCensus));
     }
 }

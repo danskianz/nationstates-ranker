@@ -12,15 +12,15 @@ import java.util.List;
  */
 public class Ranker {
 
-    public static synchronized double rawScore(List<CensusScore> nationScales) {
-        double rawScore = 0.0;
+    public static synchronized double rank(List<CensusScore> nationScales) {
+        double rank = 0.0;
         for (CensusScore scaleScore : nationScales) {
-            rawScore += computeScore(scaleScore.id, scaleScore.regionalRank);
+            rank += calculateRank(scaleScore.id, scaleScore.regionalRank);
         }
-        return rawScore;
+        return rank;
     }
 
-    private static double computeScore(int censusId, int regionalRanking) {
+    private static double calculateRank(int censusId, int regionalRanking) {
         Category redsCategory = getCategory(CensusId.fromInt(censusId));
 
         if (Category.CAT_EMPTY != redsCategory) {
