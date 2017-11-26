@@ -2,6 +2,10 @@ package com.danskianz.nationstates.ranker;
 
 import com.github.agadar.nationstates.domain.common.CensusScore;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -21,86 +25,109 @@ import javax.ws.rs.core.UriInfo;
 
 /**
  * Leaderboard API.
- * 
+ *
  * @author Daniel Anzaldo (anye.west@gmail.com)
  */
 @Api
 @ManagedBean
 @Path("leaderboard")
+@Produces(MediaType.APPLICATION_JSON)
 public class Leaderboard {
-    
+
     private static final int DEFAULT_NUM_OF_NATIONS = 5;
 
     @Inject
     private RegionService provider;
-    
+
     @Context
     private UriInfo allUri;
 
     /**
      * Get Top X Nations for a Region
-     * 
+     *
      * @param region
-     * @return the top n ranking nations in a region.
-     * If no query parameter is specified, it returns a default of 5 top
-     * nations in the list.
+     * @return the top n ranking nations in a region. If no query parameter is
+     * specified, it returns a default of 5 top nations in the list.
      */
     @GET
     @Path("regions/{region}/elites")
-    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Get top X nations for a region",
+            notes = "The top n ranking nations in a region. "
+            + "If no query parameter is specified, it returns "
+            + "a default of 5 top nations in the list.")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "mode", value = "mode of retrieving data",
+                allowableValues = "IMMEDIATE, DATA_DUMP",
+                required = true, dataType = "string", paramType = "query"),
+        @ApiImplicitParam(name = "top", value = "number of nations to show",
+                defaultValue = "5", required = false,
+                dataType = "integer", paramType = "query")
+    })
     public Map<String, Double> getTopRankings(
+            @ApiParam(value = "NationStates region", required = true)
             @PathParam("region") String region) {
 
         MultivaluedMap<String, String> params = allUri.getQueryParameters();
-        
+
         RetrievalMode mode = RetrievalMode.valueOf(params.getFirst("mode"));
 
-        int nations = params.isEmpty() ? DEFAULT_NUM_OF_NATIONS :
-                Integer.parseInt(params.getFirst("top"));
-        
+        int nations = params.isEmpty() ? DEFAULT_NUM_OF_NATIONS
+                : Integer.parseInt(params.getFirst("top"));
+
         Map<String, List<CensusScore>> regionCensus = provider
                 .getRegionCensus(region, mode);
-        
+
         if (regionCensus.size() < nations) {
             nations = regionCensus.size();
         }
-        
+
         Map<String, Double> standings = getStandings(regionCensus);
-        
+
         return standings.entrySet().stream()
                 .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
                 .limit(nations)
                 .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
     }
-    
+
     /**
      * Get Bottom X Nations for a Region
-     * 
+     *
      * @param region
-     * @return the bottom n ranking nations in a region.
-     * If no query parameter is specified, it returns a default of 5 bottom
-     * nations in the list.
+     * @return the bottom n ranking nations in a region. If no query parameter
+     * is specified, it returns a default of 5 bottom nations in the list.
      */
     @GET
     @Path("regions/{region}/unspeakables")
-    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Get bottom X nations for a region",
+            notes = "The bottom n ranking nations in a region. "
+            + "If no query parameter is specified, it returns "
+            + "a default of 5 top nations in the list.")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "mode", value = "mode of retrieving data",
+                allowableValues = "IMMEDIATE, DATA_DUMP",
+                required = true, dataType = "string", paramType = "query"),
+        @ApiImplicitParam(name = "bottom", value = "number of nations to show",
+                defaultValue = "5", required = false,
+                dataType = "integer", paramType = "query")
+    })
     public Map<String, Double> getBottomRankings(
+            @ApiParam(value = "NationStates region", required = true)
             @PathParam("region") String region) {
 
         MultivaluedMap<String, String> params = allUri.getQueryParameters();
-        
+
         RetrievalMode mode = RetrievalMode.valueOf(params.getFirst("mode"));
-        
-        int nations = params.isEmpty() ? DEFAULT_NUM_OF_NATIONS :
-                Integer.parseInt(params.getFirst("bottom"));
-        
+
+        int nations = params.isEmpty() ? DEFAULT_NUM_OF_NATIONS
+                : Integer.parseInt(params.getFirst("bottom"));
+
         Map<String, List<CensusScore>> regionCensus = provider
                 .getRegionCensus(region, mode);
-        
+
         if (regionCensus.size() < nations) {
             nations = regionCensus.size();
         }
-        
+
         Map<String, Double> standings = getStandings(regionCensus);
 
         return standings.entrySet().stream()
@@ -109,36 +136,42 @@ public class Leaderboard {
                 .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
     }
 
-    private Map<String, Double> getStandings(Map<String,
-            List<CensusScore>> regionCensus) {
-        
+    private Map<String, Double> getStandings(Map<String, List<CensusScore>> regionCensus) {
+
         Map<String, Double> standings = new HashMap<>();
-        
+
         regionCensus.entrySet().forEach((nation) -> {
             standings.put(nation.getKey(), Ranker.rank(nation.getValue()));
         });
-        
+
         return standings;
     }
-    
+
     /**
      * Get the Raw Score for a Nation
-     * 
+     *
      * @param nation
      * @return the score of the specified nation
      */
     @GET
     @Path("nations/{nation}")
-    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Get the raw score for a nation",
+            notes = "The raw score of a nation.")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "mode", value = "mode of retrieving data",
+                allowableValues = "IMMEDIATE, DATA_DUMP",
+                required = true, dataType = "string", paramType = "query")
+    })
     public Map<String, Double> getNationScore(
+            @ApiParam(value = "NationStates nation", required = true)
             @PathParam("nation") String nation) {
-        
+
         MultivaluedMap<String, String> params = allUri.getQueryParameters();
-        
+
         RetrievalMode mode = RetrievalMode.valueOf(params.getFirst("mode"));
-        
+
         List<CensusScore> nationCensus = provider.getNationCensus(nation, mode);
-        
+
         return Collections.singletonMap(nation, Ranker.rank(nationCensus));
     }
 }

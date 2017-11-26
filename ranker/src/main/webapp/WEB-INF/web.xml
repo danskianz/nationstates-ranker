@@ -23,13 +23,13 @@
         </init-param>
         <init-param>
             <param-name>swagger.api.basepath</param-name>
-            <param-value>http://localhost:8080/nationstates/ranker</param-value>
+            <param-value>http://localhost:8080/ranker/nationstates</param-value>
         </init-param>
         <load-on-startup>2</load-on-startup>
     </servlet>
     <servlet-mapping>
         <servlet-name>NationStates Ranker Application</servlet-name>
-        <url-pattern>/nationstates/ranker/*</url-pattern>
+        <url-pattern>/nationstates/*</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>Jersey2Config</servlet-name>
