@@ -1,14 +1,11 @@
 package com.danskianz.nationstates.ranker;
 
-import com.github.agadar.nationstates.domain.common.CensusScore;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -37,7 +34,7 @@ public class Leaderboard {
     private static final int DEFAULT_NUM_OF_NATIONS = 5;
 
     @Inject
-    private RegionService provider;
+    private RankService scorer;
 
     @Context
     private UriInfo allUri;
@@ -59,6 +56,9 @@ public class Leaderboard {
         @ApiImplicitParam(name = "mode", value = "mode of retrieving data",
                 allowableValues = "IMMEDIATE, DATA_DUMP",
                 required = true, dataType = "string", paramType = "query"),
+        @ApiImplicitParam(name = "fetch", value = "urgency of retrieving data",
+                allowableValues = "REALTIME, CACHED",
+                required = true, dataType = "string", paramType = "query"),
         @ApiImplicitParam(name = "top", value = "number of nations to show",
                 defaultValue = "5", required = false,
                 dataType = "integer", paramType = "query")
@@ -70,18 +70,14 @@ public class Leaderboard {
         MultivaluedMap<String, String> params = allUri.getQueryParameters();
 
         RetrievalMode mode = RetrievalMode.valueOf(params.getFirst("mode"));
+        
+        CalculationMode fetch = CalculationMode
+                .valueOf(params.getFirst("fetch"));
 
-        int nations = params.isEmpty() ? DEFAULT_NUM_OF_NATIONS
-                : Integer.parseInt(params.getFirst("top"));
+        int nations = Integer.parseInt(params.getFirst("top"));
 
-        Map<String, List<CensusScore>> regionCensus = provider
-                .getRegionCensus(region, mode);
-
-        if (regionCensus.size() < nations) {
-            nations = regionCensus.size();
-        }
-
-        Map<String, Double> standings = getStandings(regionCensus);
+        Map<String, Double> standings = scorer
+                .getRegionScores(region, mode, fetch);
 
         return standings.entrySet().stream()
                 .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
@@ -106,6 +102,9 @@ public class Leaderboard {
         @ApiImplicitParam(name = "mode", value = "mode of retrieving data",
                 allowableValues = "IMMEDIATE, DATA_DUMP",
                 required = true, dataType = "string", paramType = "query"),
+        @ApiImplicitParam(name = "fetch", value = "urgency of retrieving data",
+                allowableValues = "REALTIME, CACHED",
+                required = true, dataType = "string", paramType = "query"),
         @ApiImplicitParam(name = "bottom", value = "number of nations to show",
                 defaultValue = "5", required = false,
                 dataType = "integer", paramType = "query")
@@ -117,34 +116,19 @@ public class Leaderboard {
         MultivaluedMap<String, String> params = allUri.getQueryParameters();
 
         RetrievalMode mode = RetrievalMode.valueOf(params.getFirst("mode"));
+        
+        CalculationMode fetch = CalculationMode
+                .valueOf(params.getFirst("fetch"));
 
-        int nations = params.isEmpty() ? DEFAULT_NUM_OF_NATIONS
-                : Integer.parseInt(params.getFirst("bottom"));
+        int nations = Integer.parseInt(params.getFirst("bottom"));
 
-        Map<String, List<CensusScore>> regionCensus = provider
-                .getRegionCensus(region, mode);
-
-        if (regionCensus.size() < nations) {
-            nations = regionCensus.size();
-        }
-
-        Map<String, Double> standings = getStandings(regionCensus);
+        Map<String, Double> standings = scorer
+                .getRegionScores(region, mode, fetch);
 
         return standings.entrySet().stream()
                 .sorted(Map.Entry.comparingByValue())
                 .limit(nations)
                 .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
-    }
-
-    private Map<String, Double> getStandings(Map<String, List<CensusScore>> regionCensus) {
-
-        Map<String, Double> standings = new HashMap<>();
-
-        regionCensus.entrySet().forEach((nation) -> {
-            standings.put(nation.getKey(), Ranker.rank(nation.getValue()));
-        });
-
-        return standings;
     }
 
     /**
@@ -160,6 +144,9 @@ public class Leaderboard {
     @ApiImplicitParams({
         @ApiImplicitParam(name = "mode", value = "mode of retrieving data",
                 allowableValues = "IMMEDIATE, DATA_DUMP",
+                required = true, dataType = "string", paramType = "query"),
+        @ApiImplicitParam(name = "fetch", value = "urgency of retrieving data",
+                allowableValues = "REALTIME, CACHED",
                 required = true, dataType = "string", paramType = "query")
     })
     public Map<String, Double> getNationScore(
@@ -169,9 +156,11 @@ public class Leaderboard {
         MultivaluedMap<String, String> params = allUri.getQueryParameters();
 
         RetrievalMode mode = RetrievalMode.valueOf(params.getFirst("mode"));
+        
+        CalculationMode fetch = CalculationMode
+                .valueOf(params.getFirst("fetch"));
 
-        List<CensusScore> nationCensus = provider.getNationCensus(nation, mode);
-
-        return Collections.singletonMap(nation, Ranker.rank(nationCensus));
+        return Collections.singletonMap(nation, scorer
+                .getNationScore(nation, mode, fetch));
     }
 }

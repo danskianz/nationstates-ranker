@@ -7,43 +7,44 @@ import com.github.agadar.nationstates.domain.region.Region;
 import com.github.agadar.nationstates.enumerator.CensusId;
 import com.github.agadar.nationstates.shard.NationShard;
 import com.github.agadar.nationstates.shard.RegionShard;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
-import javax.enterprise.context.RequestScoped;
-import javax.inject.Named;
-import org.jvnet.hk2.annotations.Service;
 
 /**
  * Uses Agadar's NationStates Interface.
  *
  * @author Daniel Anzaldo (anye.west@gmail.com)
  */
-@Named
-@RequestScoped
-@Service
-public class RegionProvider implements RegionService {
+public class RegionProvider {
 
     private static final String APP_USER_AGENT
             = "Kurwianath-Northern-Redlands-Custom-Ranker";
 
     private final DailyDumps dailyDump;
+    
+    private final Map<String, List<String>> regionNationMap;
 
     public RegionProvider() {
         NationStates.setUserAgent(APP_USER_AGENT);
         dailyDump = new DailyDumps();
+        regionNationMap = new ConcurrentHashMap<>();
     }
 
-    @Override
     public Map<String, List<CensusScore>> getRegionCensus(String region,
             RetrievalMode mode) {
 
         Map<String, List<CensusScore>> regionCensus = new HashMap<>();
 
+        List<String> nationNames = new ArrayList<>();
+        
         Consumer<String> mapNationCensus = (nation) -> {
             regionCensus.put(nation, getNationCensus(nation, mode));
+            nationNames.add(nation);
         };
 
         switch (mode) {
@@ -57,19 +58,20 @@ public class RegionProvider implements RegionService {
                         .shards(RegionShard.NATION_NAMES).execute();
                 land.nationNames.forEach(mapNationCensus);
                 break;
-
+                
             default:
                 throw new AssertionError(mode.name());
         }
+        
+        regionNationMap.put(region, nationNames);
 
         return regionCensus;
     }
 
-    @Override
     public List<CensusScore> getNationCensus(String nation,
             RetrievalMode dataRetrievalMode) {
 
-        Nation country;
+        Nation country = null;
 
         switch (dataRetrievalMode) {
             case DATA_DUMP:
@@ -81,13 +83,16 @@ public class RegionProvider implements RegionService {
                         .censusIds(CensusId.values()).shards(NationShard.CENSUS)
                         .execute();
                 break;
-
             default:
                 throw new AssertionError(dataRetrievalMode.name());
         }
 
         return (country != null)
                 ? country.census : Collections.<CensusScore>emptyList();
+    }
+
+    public Map<String, List<String>> getRegionAndNationNames() {
+        return regionNationMap;
     }
 
 }

@@ -17,4 +17,6 @@ public interface RegionService {
 
     public List<CensusScore> getNationCensus(
             String nation, RetrievalMode mode);
+    
+    public Map<String, List<String>> getRegionAndNationNames();
 }
