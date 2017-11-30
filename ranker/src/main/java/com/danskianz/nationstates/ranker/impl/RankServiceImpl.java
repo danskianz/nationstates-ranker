@@ -3,8 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.danskianz.nationstates.ranker;
+package com.danskianz.nationstates.ranker.impl;
 
+import com.danskianz.nationstates.common.CalculationMode;
+import com.danskianz.nationstates.ranker.RankService;
 import com.github.agadar.nationstates.domain.common.CensusScore;
 import java.util.List;
 import java.util.Map;
@@ -22,44 +24,42 @@ import org.jvnet.hk2.annotations.Service;
 @Named("rankProvider")
 @ApplicationScoped
 @Service
-public class RankProvider implements RankService {
+public class RankServiceImpl implements RankService {
 
     private final RegionProvider regionService;
     
     private final Map<String, Double> nationScoreMap;
 
-    public RankProvider() {
+    public RankServiceImpl() {
         this.nationScoreMap = new ConcurrentHashMap<>();
         this.regionService = new RegionProvider();
     }
 
     @Override
     public Map<String, Double> getRegionScores(String region,
-            RetrievalMode mode,
             CalculationMode fetch) {
         
         switch (fetch) {
             case REALTIME:
                 Map<String, List<CensusScore>> regionCensus = regionService
-                        .getRegionCensus(region, mode);
+                        .getRegionCensus(region);
                 
                 return regionCensus.entrySet().stream().collect(Collectors.toMap(
                         nation -> nation.getKey(),
-                        nation -> getNationScore(nation.getKey(), mode, fetch)));
+                        nation -> getNationScore(nation.getKey(), fetch)));
                 
             case CACHED:
                 Map<String, List<String>> regionNationMap = regionService
                         .getRegionAndNationNames();
                 
                 if (!regionNationMap.containsKey(region)) {
-                    return getRegionScores(region, mode,
-                            CalculationMode.REALTIME);
+                    return getRegionScores(region, CalculationMode.REALTIME);
                 }
                 
                 List<String> nationList = regionNationMap.get(region);
                 return nationList.stream().collect(Collectors.toMap(
                         nation -> nation,
-                        nation -> getNationScore(nation, mode, fetch)));
+                        nation -> getNationScore(nation, fetch)));
             default:
                 throw new AssertionError(fetch.name());
             
@@ -68,26 +68,24 @@ public class RankProvider implements RankService {
     }
 
     @Override
-    public double getNationScore(String nation,
-            RetrievalMode mode,
-            CalculationMode fetch) {
+    public double getNationScore(String nation, CalculationMode fetch) {
 
         switch (fetch) {
             case REALTIME:
                 List<CensusScore> nationCensus = regionService
-                        .getNationCensus(nation, mode);
+                        .getNationCensus(nation);
                 nationScoreMap.put(nation, Ranker.rank(nationCensus));
                 break;
 
             case CACHED:
                 if (!nationScoreMap.containsKey(nation)) {
                     return getNationScore(
-                            nation, mode, CalculationMode.REALTIME);
+                            nation, CalculationMode.REALTIME);
                 }
                 break;
 
             default:
-                throw new AssertionError(mode.name());
+                throw new AssertionError(fetch.name());
 
         }
         return nationScoreMap.get(nation);

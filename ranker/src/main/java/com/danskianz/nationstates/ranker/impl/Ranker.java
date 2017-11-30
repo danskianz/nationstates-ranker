@@ -1,5 +1,6 @@
-package com.danskianz.nationstates.ranker;
+package com.danskianz.nationstates.ranker.impl;
 
+import com.danskianz.nationstates.common.Category;
 import com.github.agadar.nationstates.domain.common.CensusScore;
 import com.github.agadar.nationstates.enumerator.CensusId;
 import java.util.List;
