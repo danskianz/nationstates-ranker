@@ -54,7 +54,7 @@ public class Ranker {
             grade = 60.0;
         } else if (rank < 26) {
             grade = 50.0;
-        } else if (rank < 69) {
+        } else if (rank < 71) {
             grade = 0.0;
         } else {
             grade = -50.0;
