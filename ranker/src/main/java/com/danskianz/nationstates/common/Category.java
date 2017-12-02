@@ -1,4 +1,4 @@
-package com.danskianz.nationstates.ranker;
+package com.danskianz.nationstates.common;
 
 import com.github.agadar.nationstates.enumerator.CensusId;
 import static com.github.agadar.nationstates.enumerator.CensusId.*;
