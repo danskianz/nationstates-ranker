@@ -26,6 +26,28 @@ import javax.ws.rs.core.MediaType;
 @Path("leaderboard")
 @Produces(MediaType.APPLICATION_JSON)
 public interface LeaderboardService {
+    
+    /**
+     * Get All Nations for a Region
+     *
+     * @param region
+     * @return the list of nations in a region.
+     */
+    @GET
+    @Path("regions/{region}")
+    @ApiOperation(value = "Get top X nations for a region",
+            notes = "The top n ranking nations in a region. "
+            + "If no query parameter is specified, it returns "
+            + "a default of 5 top nations in the list.")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "fetch", value = "urgency of retrieving data",
+                allowableValues = "REALTIME, CACHED",
+                required = true, dataType = "string", paramType = "query")
+    })
+    public Map<String, Double> getAllRankings(
+            @ApiParam(value = "NationStates region", required = true)
+            @PathParam("region") String region);
+    
     /**
      * Get Top X Nations for a Region
      *
@@ -59,11 +81,11 @@ public interface LeaderboardService {
      * is specified, it returns a default of 5 bottom nations in the list.
      */
     @GET
-    @Path("regions/{region}/unspeakables")
+    @Path("regions/{region}/deplorables")
     @ApiOperation(value = "Get bottom X nations for a region",
             notes = "The bottom n ranking nations in a region. "
             + "If no query parameter is specified, it returns "
-            + "a default of 5 top nations in the list.")
+            + "a default of 5 bottom nations in the list.")
     @ApiImplicitParams({
         @ApiImplicitParam(name = "fetch", value = "urgency of retrieving data",
                 allowableValues = "REALTIME, CACHED",
@@ -86,11 +108,6 @@ public interface LeaderboardService {
     @Path("nations/{nation}")
     @ApiOperation(value = "Get the raw score for a nation",
             notes = "The raw score of a nation.")
-    @ApiImplicitParams({
-        @ApiImplicitParam(name = "fetch", value = "urgency of retrieving data",
-                allowableValues = "REALTIME, CACHED",
-                required = true, dataType = "string", paramType = "query")
-    })
     public Map<String, Double> getNationScore(
             @ApiParam(value = "NationStates nation", required = true)
             @PathParam("nation") String nation);

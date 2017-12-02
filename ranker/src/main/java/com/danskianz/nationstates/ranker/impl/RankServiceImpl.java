@@ -27,7 +27,7 @@ import org.jvnet.hk2.annotations.Service;
 public class RankServiceImpl implements RankService {
 
     private final RegionProvider regionService;
-    
+
     private final Map<String, Double> nationScoreMap;
 
     public RankServiceImpl() {
@@ -38,56 +38,40 @@ public class RankServiceImpl implements RankService {
     @Override
     public Map<String, Double> getRegionScores(String region,
             CalculationMode fetch) {
-        
+
         switch (fetch) {
             case REALTIME:
                 Map<String, List<CensusScore>> regionCensus = regionService
                         .getRegionCensus(region);
-                
+
                 return regionCensus.entrySet().stream().collect(Collectors.toMap(
                         nation -> nation.getKey(),
                         nation -> getNationScore(nation.getKey(), fetch)));
-                
+
             case CACHED:
                 Map<String, List<String>> regionNationMap = regionService
                         .getRegionAndNationNames();
-                
+
                 if (!regionNationMap.containsKey(region)) {
                     return getRegionScores(region, CalculationMode.REALTIME);
                 }
-                
+
                 List<String> nationList = regionNationMap.get(region);
                 return nationList.stream().collect(Collectors.toMap(
                         nation -> nation,
                         nation -> getNationScore(nation, fetch)));
             default:
                 throw new AssertionError(fetch.name());
-            
+
         }
-        
+
     }
 
     @Override
-    public double getNationScore(String nation, CalculationMode fetch) {
-
-        switch (fetch) {
-            case REALTIME:
-                List<CensusScore> nationCensus = regionService
-                        .getNationCensus(nation);
-                nationScoreMap.put(nation, Ranker.rank(nationCensus));
-                break;
-
-            case CACHED:
-                if (!nationScoreMap.containsKey(nation)) {
-                    return getNationScore(
-                            nation, CalculationMode.REALTIME);
-                }
-                break;
-
-            default:
-                throw new AssertionError(fetch.name());
-
-        }
+    public double getNationScore(String nation) {
+        List<CensusScore> nationCensus = regionService
+                .getNationCensus(nation);
+        nationScoreMap.put(nation, Ranker.rank(nationCensus));
         return nationScoreMap.get(nation);
     }
 

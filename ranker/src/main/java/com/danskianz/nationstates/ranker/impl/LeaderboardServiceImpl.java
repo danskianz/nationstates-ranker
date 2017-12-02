@@ -11,6 +11,7 @@ import com.danskianz.nationstates.ranker.RankService;
 import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
@@ -25,13 +26,24 @@ import org.jvnet.hk2.annotations.Service;
 @Service
 public class LeaderboardServiceImpl implements LeaderboardService {
 
-    private static final int DEFAULT_NUM_OF_NATIONS = 5;
-
     @Inject
     private RankService scorer;
 
     @Context
     private UriInfo allUri;
+
+    /**
+     * {@inheritDoc }
+     */
+    @Override
+    public Map<String, Double> getAllRankings(String region) {
+        MultivaluedMap<String, String> params = allUri.getQueryParameters();
+
+        CalculationMode fetch = CalculationMode
+                .valueOf(params.getFirst("fetch"));
+
+        return getRegionStandings(region, -1, fetch);
+    }
 
     /**
      * {@inheritDoc }
@@ -45,14 +57,7 @@ public class LeaderboardServiceImpl implements LeaderboardService {
 
         int nations = Integer.parseInt(params.getFirst("top"));
 
-        Map<String, Double> standings = scorer
-                .getRegionScores(region, fetch);
-
-        return standings.entrySet().stream()
-                .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
-                .limit(nations)
-                .collect(Collectors
-                        .toMap(Map.Entry::getKey, Map.Entry::getValue));
+        return getRegionStandings(region, nations, fetch);
     }
 
     /**
@@ -67,14 +72,7 @@ public class LeaderboardServiceImpl implements LeaderboardService {
 
         int nations = Integer.parseInt(params.getFirst("bottom"));
 
-        Map<String, Double> standings = scorer
-                .getRegionScores(region, fetch);
-
-        return standings.entrySet().stream()
-                .sorted(Map.Entry.comparingByValue())
-                .limit(nations)
-                .collect(Collectors
-                        .toMap(Map.Entry::getKey, Map.Entry::getValue));
+        return getRegionStandings(region, nations, fetch);
     }
 
     /**
@@ -83,12 +81,25 @@ public class LeaderboardServiceImpl implements LeaderboardService {
     @Override
     public Map<String, Double> getNationScore(String nation) {
         MultivaluedMap<String, String> params = allUri.getQueryParameters();
-
+        
         CalculationMode fetch = CalculationMode
                 .valueOf(params.getFirst("fetch"));
 
-        return Collections.singletonMap(nation, scorer
-                .getNationScore(nation, fetch));
+        return Collections.singletonMap(nation, scorer.getNationScore(nation));
+    }
+
+    private Map<String, Double> getRegionStandings(String region, int max,
+            CalculationMode fetch) {
+
+        Map<String, Double> standings = scorer
+                .getRegionScores(region, fetch);
+
+        Stream<Map.Entry<String, Double>> stream = standings.entrySet().stream();
+
+        return (max < 0) ? stream.collect(Collectors
+                .toMap(Map.Entry::getKey, Map.Entry::getValue))
+                : stream.limit(max).collect(Collectors
+                        .toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
 }
