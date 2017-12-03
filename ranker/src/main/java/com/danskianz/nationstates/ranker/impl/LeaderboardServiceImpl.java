@@ -81,11 +81,8 @@ public class LeaderboardServiceImpl implements LeaderboardService {
     @Override
     public Map<String, Double> getNationScore(String nation) {
         MultivaluedMap<String, String> params = allUri.getQueryParameters();
-        
-        CalculationMode fetch = CalculationMode
-                .valueOf(params.getFirst("fetch"));
 
-        return Collections.singletonMap(nation, scorer.getNationScore(nation));
+        return Collections.singletonMap(nation, scorer.getNationScore(nation, CalculationMode.REALTIME));
     }
 
     private Map<String, Double> getRegionStandings(String region, int max,

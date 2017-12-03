@@ -68,10 +68,25 @@ public class RankServiceImpl implements RankService {
     }
 
     @Override
-    public double getNationScore(String nation) {
-        List<CensusScore> nationCensus = regionService
-                .getNationCensus(nation);
-        nationScoreMap.put(nation, Ranker.rank(nationCensus));
+    public double getNationScore(String nation, CalculationMode fetch) {
+        
+        switch (fetch) {
+            case REALTIME:
+                List<CensusScore> nationCensus = regionService
+                        .getNationCensus(nation);
+                nationScoreMap.put(nation, Ranker.rank(nationCensus));
+                break;
+            case CACHED:
+                if (!nationScoreMap.containsKey(nation)) {
+                    return getNationScore(nation, CalculationMode.REALTIME);
+                }
+                
+                break;
+            default:
+                throw new AssertionError(fetch.name());
+            
+        }
+        
         return nationScoreMap.get(nation);
     }
 

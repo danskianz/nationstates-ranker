@@ -35,10 +35,8 @@ public interface LeaderboardService {
      */
     @GET
     @Path("regions/{region}")
-    @ApiOperation(value = "Get top X nations for a region",
-            notes = "The top n ranking nations in a region. "
-            + "If no query parameter is specified, it returns "
-            + "a default of 5 top nations in the list.")
+    @ApiOperation(value = "Get all nations for a region",
+            notes = "The score of all nations in a region.")
     @ApiImplicitParams({
         @ApiImplicitParam(name = "fetch", value = "urgency of retrieving data",
                 allowableValues = "REALTIME, CACHED",
@@ -99,14 +97,14 @@ public interface LeaderboardService {
             @PathParam("region") String region);
     
     /**
-     * Get the Raw Score for a Nation
+     * Get the Realtime Raw Score for a Nation
      *
      * @param nation
      * @return the score of the specified nation
      */
     @GET
     @Path("nations/{nation}")
-    @ApiOperation(value = "Get the raw score for a nation",
+    @ApiOperation(value = "Get the realtime raw score for a nation",
             notes = "The raw score of a nation.")
     public Map<String, Double> getNationScore(
             @ApiParam(value = "NationStates nation", required = true)

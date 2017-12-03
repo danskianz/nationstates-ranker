@@ -20,5 +20,5 @@ public interface RankService {
     public Map<String, Double> getRegionScores(String region,
             CalculationMode fetch);
     
-    public double getNationScore(String nation);
+    public double getNationScore(String nation, CalculationMode fetch);
 }
