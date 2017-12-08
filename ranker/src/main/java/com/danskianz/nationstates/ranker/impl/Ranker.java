@@ -24,7 +24,7 @@ public class Ranker {
     private static double calculateRank(int censusId, int regionalRanking) {
         Category redsCategory = getCategory(CensusId.fromInt(censusId));
 
-        if (Category.CAT_EMPTY != redsCategory) {
+        if (Category.CAT_UNCATEGORIZED != redsCategory) {
             return gradingScale(regionalRanking) * redsCategory.getMultiplier();
         }
         return 0.0;
@@ -36,30 +36,21 @@ public class Ranker {
                 return scoringCategory;
             }
         }
-        return Category.CAT_EMPTY;
+        return Category.CAT_UNCATEGORIZED;
     }
 
     private static double gradingScale(int rank) {
-        double grade;
-
+        double grade = 0.0d;
+        
         if (rank == 1) {
-            grade = 100.0;
-        } else if (rank < 6) {
-            grade = 90.0;
-        } else if (rank < 11) {
-            grade = 80.0;
-        } else if (rank < 16) {
-            grade = 70.0;
-        } else if (rank < 21) {
-            grade = 60.0;
-        } else if (rank < 26) {
-            grade = 50.0;
-        } else if (rank < 71) {
-            grade = 0.0;
-        } else {
-            grade = -50.0;
+            grade = 1.2d;
+        } else if (rank < 4) {
+            grade = 1.1d;
+        } else if (rank < 51) {
+            int bucket = Math.floorDiv(rank, 5);
+            grade = 1.1d - (bucket * 0.1);
         }
-
+        
         return grade;
     }
 }
