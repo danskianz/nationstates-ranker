@@ -21,3 +21,7 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 /ranker/target/
+/northern-redlands-app/nationstates-ranker-persistence/nbproject/
+/northern-redlands-app/nationstates-ranker-persistence/target/
+/northern-redlands-app/ranker-persistence/nbproject/
+/northern-redlands-app/ranker-persistence/target/
