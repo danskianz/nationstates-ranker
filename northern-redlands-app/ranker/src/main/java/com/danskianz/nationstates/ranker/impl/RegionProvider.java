@@ -1,5 +1,6 @@
 package com.danskianz.nationstates.ranker.impl;
 
+import com.danskianz.nationstates.common.RankerConstants;
 import com.github.agadar.nationstates.NationStates;
 import com.github.agadar.nationstates.domain.common.CensusScore;
 import com.github.agadar.nationstates.domain.nation.Nation;
@@ -20,14 +21,11 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Daniel Anzaldo (anye.west@gmail.com)
  */
 public class RegionProvider {
-
-    private static final String APP_USER_AGENT
-            = "Kurwianath-Northern-Redlands-Custom-Ranker";
     
     private final Map<String, List<String>> regionNationMap;
 
     public RegionProvider() {
-        NationStates.setUserAgent(APP_USER_AGENT);
+        NationStates.setUserAgent(RankerConstants.APP_USER_AGENT);
         regionNationMap = new ConcurrentHashMap<>();
     }
 

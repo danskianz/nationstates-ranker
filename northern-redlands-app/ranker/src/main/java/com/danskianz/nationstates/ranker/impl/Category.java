@@ -1,8 +1,10 @@
-package com.danskianz.nationstates.common;
+package com.danskianz.nationstates.ranker.impl;
 
 import com.github.agadar.nationstates.enumerator.CensusId;
 import static com.github.agadar.nationstates.enumerator.CensusId.*;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -24,7 +26,7 @@ public enum Category {
             CIVIL_RIGHTS, POLITICAL_FREEDOM, POPULATION, AVERAGE_INCOME,
             AVERAGE_INCOME_OF_POOR, AVERAGE_INCOME_OF_RICH, ECO_FRIENDLINESS,
             FREEDOM_FROM_TAXATION, HEALTH, INCOME_EQUALITY, INTELLIGENCE,
-            LIFESPAN, WELFARE),
+            LIFESPAN),
     
     CAT_INV_CITIZENSHIP(-0.20,
             DEATH_RATE, IGNORANCE, POLITICAL_APATHY, IDEOLOGICAL_RADICALITY,
@@ -49,7 +51,7 @@ public enum Category {
             PUBLIC_HEALTHCARE, PUBLIC_TRANSPORT, SAFETY, SCIENTIFIC_ADVANCEMENT,
             WEATHER),
     
-    CAT_INV_LIVING_STANDARDS(-0.20, CRIME),
+    CAT_INV_LIVING_STANDARDS(-0.20, CRIME, YOUTH_REBELLIOUSNESS),
     
     CAT_ADVANCED_INDUSTRIES(0.07,
             INDUSTRY_ARMS_MANUFACTURING, INDUSTRY_INFORMATION_TECHNOLOGY,
@@ -65,11 +67,16 @@ public enum Category {
             INDUSTRY_MINING, INDUSTRY_TIMBERWOOD_CHIPPING,
             INDUSTRY_TROUT_FISHING),
     
-    /* uncategorized census data */
-    CAT_EMPTY(0.0);
+    CAT_EMPTY(0.0); /* uncategorized census data */
 
     private final double multiplier;
     private final CensusId[] censusIds;
+
+    private static List<CensusId> categorizedCensusIds;
+    
+    static {
+        initializeCategories();
+    }
 
     private Category(double multiplier, CensusId... censusIds) {
         this.multiplier = multiplier;
@@ -84,4 +91,17 @@ public enum Category {
         return Arrays.asList(censusIds);
     }
 
+    public static List<CensusId> getCategorizedCensusIds() {
+        if (categorizedCensusIds == null) {
+            initializeCategories();
+        }
+        return Collections.unmodifiableList(categorizedCensusIds);
+    }
+
+    private static void initializeCategories() {
+        categorizedCensusIds = new ArrayList<>();
+        for (Category base : Category.values()) {
+            categorizedCensusIds.addAll(base.getCensusIds());
+        }
+    }
 }
